@@ -24,12 +24,14 @@ import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 // TODO: TO BE REMOVED AFTER TESTING
-
 @Composable
 internal fun GeoScreen() {
     val locationTrackerFactory: LocationTrackerFactory = rememberLocationTrackerFactory(
@@ -61,14 +63,9 @@ private fun GeoScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Button(onClick = viewModel::onStartClick) {
-            Text(text = "Start")
+        Button(onClick = viewModel::getLocation) {
+            Text(text = "Get current location")
         }
-
-        Button(onClick = viewModel::onStopClick) {
-            Text(text = "Stop")
-        }
-
         Text(
             text = text,
             modifier = Modifier.wrapContentSize(),
@@ -78,27 +75,28 @@ private fun GeoScreen(
     }
 }
 
-internal class GeoViewModel(val locationTracker: LocationTracker) : ViewModel() {
+internal class GeoViewModel(
+    val locationTracker: LocationTracker
+) : ViewModel() {
     private val _result: MutableStateFlow<String> = MutableStateFlow("press button")
     val result: StateFlow<String> = _result.asStateFlow()
 
-    init {
-        locationTracker.getLocationsFlow()
-            .onEach { _result.value = it.toString() }
-            .launchIn(viewModelScope)
-    }
-
-    fun onStartClick() {
+    fun getLocation() {
         viewModelScope.launch {
-            try {
-                locationTracker.startTracking()
-            } catch (exc: Exception) {
-                _result.value = exc.toString()
+            // Stop tracking after 10 seconds
+            withTimeout(10000) {
+                try {
+                    locationTracker.startTracking()
+                    locationTracker.getLocationsFlow()
+                        .take(5) // only take 5 emissions
+                        .onEach { _result.value = it.toString() }
+                        .onCompletion { locationTracker.stopTracking() }
+                        .collect()
+                } catch (e: Exception) {
+                    _result.value = e.toString()
+                    locationTracker.stopTracking()
+                }
             }
         }
-    }
-
-    fun onStopClick() {
-        locationTracker.stopTracking()
     }
 }
