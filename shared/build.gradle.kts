@@ -1,9 +1,13 @@
+import org.jetbrains.compose.internal.utils.getLocalProperty
+
 plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
+    kotlin("plugin.serialization") version "1.9.0"
     id("com.android.library")
     id("org.jetbrains.compose")
-    kotlin("plugin.serialization") version "1.9.0"
+    // A plugin for generating BuildConstants for any kind of Gradle projects
+    id("com.github.gmazzo.buildconfig") version "4.1.2"
 }
 
 kotlin {
@@ -23,17 +27,25 @@ kotlin {
             baseName = "shared"
             isStatic = true
         }
-        extraSpecAttributes["resources"] = "['src/commonMain/resources/**', 'src/iosMain/resources/**']"
+        /**
+         * Issue upgrading to Compose Multiplatform 1.5.1 (RESOLVED)
+         * Kotlin.cocoapods.extraSpecAttributes["resources"]
+         * is not compatible with Compose Multiplatform's
+         * resources management for iOS.
+         */
+//        extraSpecAttributes["resources"] =
+//            "['src/commonMain/resources/**', 'src/iosMain/resources/**']"
     }
 
-    val ktorVersion = "2.3.2"
-
     sourceSets {
+        val ktorVersion = "2.3.2"
+
         val commonMain by getting {
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
-                implementation(compose.material)
+                implementation(compose.material3)
+                implementation(compose.materialIconsExtended)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
                 implementation("dev.icerock.moko:geo-compose:0.6.0")
@@ -41,6 +53,9 @@ kotlin {
                 implementation("io.ktor:ktor-client-core:$ktorVersion")
                 implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+                implementation("media.kamel:kamel-image:0.7.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+
             }
         }
         val androidMain by getting {
@@ -78,11 +93,19 @@ android {
         minSdk = (findProperty("android.minSdk") as String).toInt()
         targetSdk = (findProperty("android.targetSdk") as String).toInt()
     }
+    // Generating BuildConstants
+    buildConfig {
+        buildConfigField(
+            type = "String",
+            name = "API_KEY",
+            value = "\"${getLocalProperty("apiKey")}\""
+        )
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlin {
-        jvmToolchain(11)
+        jvmToolchain(17)
     }
 }
