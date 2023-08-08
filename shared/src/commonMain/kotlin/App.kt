@@ -12,7 +12,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import common.RequestState
 import common.Status.ERROR
 import common.Status.IDLE
@@ -22,7 +21,9 @@ import data.remote.model.WeatherResponse
 import dev.icerock.moko.mvvm.compose.getViewModel
 import dev.icerock.moko.mvvm.compose.viewModelFactory
 import di.NetworkModule
+import presentation.WeatherCard
 import presentation.WeatherViewModel
+import ui.DesignSystem
 import ui.theme.BasicBreezeTheme
 
 @Composable
@@ -40,15 +41,16 @@ fun App() {
 
     BasicBreezeTheme {
         Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            modifier = Modifier
+                .fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
+                    .padding(DesignSystem.Padding.Large),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+                verticalArrangement = Arrangement.spacedBy(DesignSystem.Padding.Medium),
             ) {
                 Button(onClick = {
                     viewModel.getWeather("Sydney, Australia")
@@ -63,13 +65,17 @@ fun App() {
                 }
                 when (result.status) {
                     SUCCESS -> {
-                        Text(text = "City -> ${result.data?.location?.name ?: "null"}")
-                        Text(text = "Condition -> ${result.data?.current?.condition?.text ?: "null"}")
-                        Text(text = "Temperature -> ${result.data?.current?.tempC.toString()}")
+                        WeatherCard(
+                            degree = result.data?.current?.tempC.toString(),
+                            condition = result.data?.current?.condition?.text.toString(),
+                            location = result.data?.location?.name.toString() + ", " + result.data?.location?.country.toString(),
+                            highLow = result.data?.forecast?.forecastday?.first()?.day?.maxtempC.toString(),
+                            realFeel = result.data?.current?.feelslikeC.toString()
+                        )
                     }
-                    ERROR -> Text(text = "ERROR")
-                    IDLE -> Text(text = "IDLE")
-                    LOADING -> Text(text = "LOADING")
+                    ERROR -> Text(text = "❌")
+                    IDLE -> Text(text = "🥱")
+                    LOADING -> Text(text = "🍭🍭🍭")
                 }
             }
         }
