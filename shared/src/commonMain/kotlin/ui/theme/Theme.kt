@@ -73,11 +73,13 @@ private val darkColors = darkColorScheme(
 
 @Composable
 fun BasicBreezeTheme(content: @Composable () -> Unit) {
-    val colorScheme =
-        // Dynamic theming is not yet supported on iOS
-        // https://github.com/JetBrains/compose-multiplatform/issues/3213
-        if (getPlatformName() == "iOS") lightColors
-        else if (isSystemInDarkTheme()) darkColors else lightColors
+    // Dynamic theming is not yet supported on iOS
+    // https://github.com/JetBrains/compose-multiplatform/issues/3213
+    val colorScheme = when {
+        getPlatformName() == "iOS" -> lightColors
+        isSystemInDarkTheme() -> darkColors
+        else -> lightColors
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,
