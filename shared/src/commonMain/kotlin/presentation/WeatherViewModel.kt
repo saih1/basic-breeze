@@ -1,8 +1,8 @@
 package presentation
 
 import common.RequestState
+import data.local.model.WeatherEntity
 import data.remote.model.WeatherQuery
-import data.remote.model.WeatherResponse
 import data.repository.WeatherRepository
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,9 +13,9 @@ import kotlinx.coroutines.launch
 class WeatherViewModel(
     private val repository: WeatherRepository
 ) : ViewModel() {
-    private val _weather: MutableStateFlow<RequestState<WeatherResponse>> =
+    private val _weather: MutableStateFlow<RequestState<WeatherEntity>> =
         MutableStateFlow(RequestState.idle())
-    val weather: StateFlow<RequestState<WeatherResponse>> = _weather.asStateFlow()
+    val weather: StateFlow<RequestState<WeatherEntity>> = _weather.asStateFlow()
 
     // TODO: Remove this after testing, only for testing
     fun getWeather(city: String) {

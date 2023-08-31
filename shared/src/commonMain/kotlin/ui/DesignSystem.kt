@@ -25,5 +25,6 @@ object DesignSystem {
         val Medium = 16.dp
         val Large = 25.89.dp
         val ExtraLarge = 41.89.dp
+        val ExtraExtraLarge = 67.77.dp
     }
 }
