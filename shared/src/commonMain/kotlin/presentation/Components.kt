@@ -19,7 +19,7 @@ import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material.icons.rounded.WindPower
 import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,10 +27,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import data.local.model.DayForecast
+import data.local.model.HourlyForecast
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import ui.DesignSystem
@@ -41,9 +42,13 @@ fun MainWeatherCard(
     condition: String,
     location: String,
     highLow: String,
-    realFeel: String
+    realFeel: String,
+    iconUrl: String,
+    modifier: Modifier = Modifier
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = modifier.fillMaxWidth()
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -81,14 +86,13 @@ fun MainWeatherCard(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Ideally, you'd use an icon that represents the weather condition.
-                // https://cdn.weatherapi.com/weather/64x64/day/296.png
-                // TODO: Logic to convert image url from api to usable data
                 KamelImage(
-                    resource = asyncPainterResource(data = "https://cdn.weatherapi.com/weather/64x64/day/296.png"),
+                    resource = asyncPainterResource(data = iconUrl),
                     contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.size(DesignSystem.Size.ExtraLarge)
+                    modifier = Modifier.size(DesignSystem.Size.ExtraExtraLarge),
+                    onLoading = {
+                        CircularProgressIndicator()
+                    }
                 )
                 Spacer(
                     modifier = Modifier.height(DesignSystem.Size.Small)
@@ -102,11 +106,8 @@ fun MainWeatherCard(
     }
 }
 
-// TODO: TESTING
 @Composable
-fun ForecastCard(
-    forecasts: List<DayForecast> // A list of DayForecast data class instances (to be defined below)
-) {
+fun ForecastCard(forecasts: List<DayForecast>) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -143,7 +144,7 @@ fun ForecastCard(
                                 modifier = Modifier.size(DesignSystem.Size.Medium)
                             )
                             Text(
-                                text = "${forecast.rainChance}%",
+                                text = forecast.rainChance,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -161,7 +162,7 @@ fun ForecastCard(
                     // Max Temperature Segment
                     Box(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "${forecast.tempMax}°/${forecast.tempMin}°",
+                            text = "${forecast.tempMax}/${forecast.tempMin}",
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
@@ -170,14 +171,6 @@ fun ForecastCard(
         }
     }
 }
-
-data class DayForecast(
-    val date: String,
-    val rainChance: Int,
-    val conditionImageUrl: String,
-    val tempMax: Int,
-    val tempMin: Int
-)
 
 @Composable
 fun HourlyWeatherCard(hours: List<HourlyForecast>) {
@@ -207,10 +200,13 @@ fun HourlyWeatherCard(hours: List<HourlyForecast>) {
                     KamelImage(
                         resource = asyncPainterResource(hourForecast.iconUrl),
                         contentDescription = null,
-                        modifier = Modifier.size(DesignSystem.Size.Large)
+                        modifier = Modifier.size(DesignSystem.Size.Large),
+                        onLoading = {
+                            CircularProgressIndicator()
+                        }
                     )
                     Text(
-                        text = "${hourForecast.temperature}°",
+                        text = hourForecast.temperature,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Row(
@@ -223,7 +219,7 @@ fun HourlyWeatherCard(hours: List<HourlyForecast>) {
                             modifier = Modifier.size(DesignSystem.Size.Medium)
                         )
                         Text(
-                            text = "${hourForecast.rainChance}%",
+                            text = hourForecast.rainChance,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -233,48 +229,69 @@ fun HourlyWeatherCard(hours: List<HourlyForecast>) {
     }
 }
 
-data class HourlyForecast(
-    val time: String,
-    val iconUrl: String,
-    val temperature: Int,
-    val rainChance: Int
-)
-
 // TODO REMOVE
 @Composable
 fun EnvironmentalFactorsCard(
-    uvIndex: Int,
-    humidity: Int,
-    windSpeed: Int,
+    uvIndex: String,
+    humidity: String,
+    windSpeed: String,
     sunrise: String,
     sunset: String
 ) {
-    val factors = listOf(
-        EnvironmentalFactor(value = uvIndex.toString(), label = "UV Index", icon = Icons.Rounded.WbSunny),
-        EnvironmentalFactor(value = "$humidity%", label = "Humidity", icon = Icons.Rounded.WaterDrop),
-        EnvironmentalFactor(value = "${windSpeed}km/h", label = "Wind", icon = Icons.Rounded.WindPower),
-        EnvironmentalFactor(value = sunrise, label = "Sunrise", icon = Icons.Rounded.BrightnessHigh),
-        EnvironmentalFactor(value = sunset, label = "Sunset", icon = Icons.Rounded.BrightnessLow),
+    data class EnvironmentalFactor(
+        val value: String,
+        val label: String,
+        val icon: ImageVector
     )
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    val factors = listOf(
+        EnvironmentalFactor(
+            value = uvIndex,
+            label = "UV Index",
+            icon = Icons.Rounded.WbSunny
+        ),
+        EnvironmentalFactor(
+            value = sunset,
+            label = "Sunset",
+            icon = Icons.Rounded.BrightnessLow
+        ),
+        EnvironmentalFactor(
+            value = windSpeed,
+            label = "Wind",
+            icon = Icons.Rounded.WindPower
+        ),
+        EnvironmentalFactor(
+            value = sunrise,
+            label = "Sunrise",
+            icon = Icons.Rounded.BrightnessHigh
+        ),
+        EnvironmentalFactor(
+            value = humidity,
+            label = "Humidity",
+            icon = Icons.Rounded.WaterDrop
+        ),
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DesignSystem.Padding.Medium),
-            contentAlignment = Alignment.Center
+                .padding(DesignSystem.Padding.Medium)
         ) {
-            // Divide factors into groups of 2
-            val rows: List<List<EnvironmentalFactor>> = factors.chunked(2)
+            val chunkedList: List<List<EnvironmentalFactor>> = factors.chunked(2)
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(DesignSystem.Size.Small)
             ) {
-                rows.forEach { rowFactors ->
+                chunkedList.forEach {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        rowFactors.forEach { factor ->
+                        it.forEach { factor ->
                             EnvironmentalFactorItem(
                                 value = factor.value,
                                 label = factor.label,
@@ -282,11 +299,6 @@ fun EnvironmentalFactorsCard(
                             )
                         }
                     }
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = DesignSystem.Padding.Small)
-                    )
                 }
             }
         }
@@ -331,5 +343,3 @@ fun EnvironmentalFactorItem(
         }
     }
 }
-
-data class EnvironmentalFactor(val value: String, val label: String, val icon: ImageVector)
