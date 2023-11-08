@@ -1,6 +1,6 @@
 package di
 
-import MyApplication.shared.BuildConfig
+import BasicBreeze.shared.BuildConfig
 import data.remote.api.WeatherApi
 import data.remote.api.WeatherApiService
 import data.repository.WeatherRepository
