@@ -7,6 +7,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 
 const val BASE_URL = "https://api.weatherapi.com/v1/forecast.json"
 
@@ -15,9 +16,14 @@ interface WeatherApiService {
 }
 
 class WeatherApi(private val apiKey: String) : WeatherApiService {
+    private val customJson: Json = Json {
+        isLenient = true
+        ignoreUnknownKeys = true
+    }
+
     private val httpClient = HttpClient {
-        install(ContentNegotiation) {
-            json()
+        install(plugin = ContentNegotiation) {
+            json(json = customJson)
         }
     }
 
